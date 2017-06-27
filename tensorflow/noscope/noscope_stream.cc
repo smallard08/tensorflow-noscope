@@ -25,11 +25,11 @@ NoscopeStream::NoscopeStream(const size_t kSkip,
 }//NoscopeStream()
 
 bool NoscopeStream::AddFrames(std::string& fname) {
-  
+	return false;
 }//AddFrames()
 
 bool NoscopeStream::DequeueFrames(int num) {
-
+	return false;
 }//DequeueFrames()
   
 }//namespace noscope

@@ -134,25 +134,25 @@ int main(int argc, char* argv[]) {
   std::string use_blocked;
   std::string ref_image;
   std::vector<Flag> flag_list = {
-      Flag("graph", &graph, "Graph to be executed"), //Tensorflow graph in .pb format (output of other script)
-      Flag("video", &video, "Video to load"), //Actual video to decode?
-      Flag("yolo_cfg", &yolo_cfg, "YOLO config file"), 
-      Flag("yolo_weights", &yolo_weights, "YOLO weights file"), //YOLO stuff you need for init
-      Flag("avg_fname", &avg_fname, "Filename with the average (txt)"), //TIGTBAP
-      Flag("confidence_csv", &confidence_csv, "CSV to output confidences to"), //whatever file you want to save the confidence values to
-      Flag("diff_thresh", &diff_thresh_str, "Difference filter threshold"), //lower bound on df - when it passes it onto next filter
+      Flag("graph", &graph, "Graph to be executed"),
+      Flag("video", &video, "Video to load"),
+      Flag("yolo_cfg", &yolo_cfg, "YOLO config file"),
+      Flag("yolo_weights", &yolo_weights, "YOLO weights file"),
+      Flag("avg_fname", &avg_fname, "Filename with the average (txt)"),
+      Flag("confidence_csv", &confidence_csv, "CSV to output confidences to"),
+      Flag("diff_thresh", &diff_thresh_str, "Difference filter threshold"),
       Flag("distill_thresh_lower", &distill_thresh_lower_str, "Distill threshold (lower)"),
-      Flag("distill_thresh_upper", &distill_thresh_upper_str, "Distill threshold (upper)"), //when to call on the specialized model
+      Flag("distill_thresh_upper", &distill_thresh_upper_str, "Distill threshold (upper)"),
       Flag("skip", &skip, "Number of frames to skip"),
-      Flag("nb_frames", &nb_frames, "Number of frames to read"), //FT
-      Flag("start_from", &start_from, "Where to start from"), //FT
-      Flag("yolo_class", &yolo_class, "YOLO class"), //More YOLO
-      Flag("skip_small_cnn", &skip_small_cnn, "0/1 skip small CNN or not"), //FT
-      Flag("skip_diff_detection", &skip_diff_detection, "0/1 skip diff detection or not"), //FT
-      Flag("dumped_videos", &dumped_videos, ""), //Actual binary file of video - still not sure why this is here
-      Flag("diff_detection_weights", &diff_detection_weights, "Difference detection weights"), //FT
-      Flag("use_blocked", &use_blocked, "0/1 whether or not to use blocked DD"), 
-      Flag("ref_image", &ref_image, "reference image"), //TIGTBAP
+      Flag("nb_frames", &nb_frames, "Number of frames to read"),
+      Flag("start_from", &start_from, "Where to start from"),
+      Flag("yolo_class", &yolo_class, "YOLO class"),
+      Flag("skip_small_cnn", &skip_small_cnn, "0/1 skip small CNN or not"),
+      Flag("skip_diff_detection", &skip_diff_detection, "0/1 skip diff detection or not"),
+      Flag("dumped_videos", &dumped_videos, ""),
+      Flag("diff_detection_weights", &diff_detection_weights, "Difference detection weights"),
+      Flag("use_blocked", &use_blocked, "0/1 whether or not to use blocked DD"),
+      Flag("ref_image", &ref_image, "reference image"),
   };
   std::string usage = tensorflow::Flags::Usage(argv[0], flag_list);
   const bool parse_result = tensorflow::Flags::Parse(&argc, argv, flag_list);
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
   std::cerr << "Loaded NoscopeLabeler\n";
 
   auto start = std::chrono::high_resolution_clock::now();
-  labeler.RunDifferenceFilter(diff_thresh, kUseBlocked, kRefImage);
+  labeler.RunDifferenceFilter(diff_thresh, 10000000, kUseBlocked, kRefImage);
   auto diff_end = std::chrono::high_resolution_clock::now();
   if (!kSkipSmallCNN) {
     labeler.PopulateCNNFrames();

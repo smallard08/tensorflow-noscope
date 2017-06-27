@@ -22,7 +22,7 @@
 
 namespace noscope {
 
-NoscopeLabeler::NoscopeLabeler(tensorflow::Session *session, 
+NoscopeLabeler::NoscopeLabeler(tensorflow::Session *session,
                          yolo::YOLO *yolo_classifier,
                          noscope::filters::DifferenceFilter diff_filt,
                          const std::string& avg_fname,
@@ -46,69 +46,63 @@ NoscopeLabeler::NoscopeLabeler(tensorflow::Session *session,
   memcpy(avg_.data, &nums[0], NoscopeData::kDistFrameSize_ * sizeof(float));
 }
 
-/*
-*diff_confidence -> actually storing how similar one frame is to the previous frame
-*cnn_confidence -> actually storing the probability that whatever object you are looking for is in the frame
-*/
-
-void NoscopeLabeler::RunDifferenceFilter(const float lower_thresh, //threshold to pass on to next level
+void NoscopeLabeler::RunDifferenceFilter(const float lower_thresh,
                                       const float upper_thresh,
-                                      const bool const_ref, 
+                                      const bool const_ref,
                                       const size_t kRef) {
-  const std::vector<uint8_t>& kFrameData = all_data_.diff_data_; //load the stuff the difference filter should be handling
-  const int kFrameSize = NoscopeData::kDiffFrameSize_; //Getting how big each frame is so you can fastforward to stuff
+  const std::vector<uint8_t>& kFrameData = all_data_.diff_data_;
+  const int kFrameSize = NoscopeData::kDiffFrameSize_;
   #pragma omp parallel for num_threads(kNumThreads_) schedule(static)
-  for (size_t i = kDiffDelay_; i < kNbFrames_; i++) { //Run over every single frame in the batch
+  for (size_t i = kDiffDelay_; i < kNbFrames_; i++) {
     const uint8_t *kRefImg = const_ref ?
         &kFrameData[kRef * kFrameSize] :
-        &kFrameData[(i - kDiffDelay_) * kFrameSize]; //retrieve the reference image
-    float tmp = kDifferenceFilter_.fp(&kFrameData[i * kFrameSize], kRefImg); //actual run of the difference filter
-    diff_confidence_[i] = tmp; //save the difference value back as a confidence value
-    if (tmp < lower_thresh) { //If there is very low difference
-      labels_[i] = false; //nothing there - always???
-      frame_status_[i] = kDiffFiltered; //set this frame as filtered
+        &kFrameData[(i - kDiffDelay_) * kFrameSize];
+    float tmp = kDifferenceFilter_.fp(&kFrameData[i * kFrameSize], kRefImg);
+    diff_confidence_[i] = tmp;
+    if (tmp < lower_thresh) {
+      labels_[i] = false;
+      frame_status_[i] = kDiffFiltered;
     } else {
-      frame_status_[i] = kDiffUnfiltered; //otherwise - pass onto the specialized CNN to eyeball
+      frame_status_[i] = kDiffUnfiltered;
     }
   }
-  for (size_t i = kDiffDelay_; i < kNbFrames_; i++) //iterate over every frame
+  for (size_t i = kDiffDelay_; i < kNbFrames_; i++)
     if (frame_status_[i] == kDiffUnfiltered)
-      cnn_frame_ind_.push_back(i); //find every frame that is problematic and add it to an array for the CNN to look at
+      cnn_frame_ind_.push_back(i);
 }
 
 void NoscopeLabeler::PopulateCNNFrames() {
   auto start = std::chrono::high_resolution_clock::now();
 
-  for (size_t i = 0; i < kDiffDelay_; i++) cnn_frame_ind_.push_back(i); //Add every frame before the difference delay
+  for (size_t i = 0; i < kDiffDelay_; i++) cnn_frame_ind_.push_back(i);
 
   const std::vector<float>& kDistData = all_data_.dist_data_;
-  const std::vector<float>& kDistData = all_data_.dist_data_;
-  const int kFrameSize = NoscopeData::kDistFrameSize_; //Need this to jump to random places in the array?
+  const int kFrameSize = NoscopeData::kDistFrameSize_;
 
 
   using namespace tensorflow;
-  const size_t kNbCNNFrames = cnn_frame_ind_.size(); //How many frames need to look at
-  const size_t kNbLoops = (kNbCNNFrames + kMaxCNNImages_ - 1) / kMaxCNNImages_; //Figure the number of passes you need
+  const size_t kNbCNNFrames = cnn_frame_ind_.size();
+  const size_t kNbLoops = (kNbCNNFrames + kMaxCNNImages_ - 1) / kMaxCNNImages_;
   const float* avg = (float *) avg_.data;
-  for (size_t i = 0; i < kNbLoops; i++) { //Creating tensors of the correct size
+  for (size_t i = 0; i < kNbLoops; i++) {
     const size_t kImagesToRun =
-        std::min(kMaxCNNImages_, cnn_frame_ind_.size() - i * kMaxCNNImages_); //number of frames in this batch
+        std::min(kMaxCNNImages_, cnn_frame_ind_.size() - i * kMaxCNNImages_);
     Tensor input(DT_FLOAT,
                  TensorShape({kImagesToRun,
                              NoscopeData::kDistResol_.height,
                              NoscopeData::kDistResol_.width,
-                             kNbChannels_})); //create the input tensor with the correct number of frames
-    auto input_mapped = input.tensor<float, 4>(); //size everything and cast to correct data type?
-    float *tensor_start = &input_mapped(0, 0, 0, 0); //get a handle on the first input
+                             kNbChannels_}));
+    auto input_mapped = input.tensor<float, 4>();
+    float *tensor_start = &input_mapped(0, 0, 0, 0);
     #pragma omp parallel for
-    for (size_t j = 0; j < kImagesToRun; j++) { //iterate through every frame to load into the tensor
-      const size_t kImgInd = i * kMaxCNNImages_ + j; //get the frame index
-      float *output = tensor_start + j * kFrameSize; //find the pointer to the piece of tensor to modify
-      const float *input = &kDistData[cnn_frame_ind_[kImgInd] * kFrameSize]; //find the pointer to the frame needed
-      for (size_t k = 0; k < kFrameSize; k++) //loop through all the floats? representing the frame
-        output[k] = input[k] / 255. - avg[k]; //load the tensor with the normalized and mean-subtracted frame data
+    for (size_t j = 0; j < kImagesToRun; j++) {
+      const size_t kImgInd = i * kMaxCNNImages_ + j;
+      float *output = tensor_start + j * kFrameSize;
+      const float *input = &kDistData[cnn_frame_ind_[kImgInd] * kFrameSize];
+      for (size_t k = 0; k < kFrameSize; k++)
+        output[k] = input[k] / 255. - avg[k];
     }
-    dist_tensors_.push_back(input); //add the normed/mean-subbed data to the dist_tensor_ array
+    dist_tensors_.push_back(input);
   }
 
 
@@ -121,44 +115,44 @@ void NoscopeLabeler::RunSmallCNN(const float lower_thresh, const float upper_thr
   using namespace tensorflow;
 
   // Round up
-  const size_t kNbCNNFrames = cnn_frame_ind_.size(); //the number of frames to run through the CNN
-  const size_t kNbLoops = (kNbCNNFrames + kMaxCNNImages_ - 1) / kMaxCNNImages_; //Calculate the number of loops needed
+  const size_t kNbCNNFrames = cnn_frame_ind_.size();
+  const size_t kNbLoops = (kNbCNNFrames + kMaxCNNImages_ - 1) / kMaxCNNImages_;
 
-  for (size_t i = 0; i < kNbLoops; i++) { //loop over number of tensors?
+  for (size_t i = 0; i < kNbLoops; i++) {
     const size_t kImagesToRun =
-        std::min(kMaxCNNImages_, cnn_frame_ind_.size() - i * kMaxCNNImages_); //Figure number of images in this batch?
-    auto input = dist_tensors_[i]; //Grab input tensor
+        std::min(kMaxCNNImages_, cnn_frame_ind_.size() - i * kMaxCNNImages_);
+    auto input = dist_tensors_[i];
     /*cudaHostRegister(&(input.tensor<float, 4>()(0, 0, 0, 0)),
                      kImagesToRun * kFrameSize * sizeof(float),
                      cudaHostRegisterPortable);*/
 
 
-    std::vector<tensorflow::Tensor> outputs; //create output tensor
+    std::vector<tensorflow::Tensor> outputs;
     std::vector<std::pair<string, tensorflow::Tensor> > inputs = {
       {"input_img", input},
       // {"keras_learning_phase", learning_phase},
-    }; //Name and create the input tensor
+    };
 
-    tensorflow::Status status = session_->Run(inputs, {"output_prob"}, {}, &outputs); //Update tensor status and run the
+    tensorflow::Status status = session_->Run(inputs, {"output_prob"}, {}, &outputs);
     // TF_CHECK_OK(status);
     // FIXME: should probably check the tensor output size here.
 
     {
-      auto output_mapped = outputs[0].tensor<float, 2>(); //resize and map the output tensor
-      for (size_t j = 0; j < kImagesToRun; j++) { //loop through all frames needed
-        Status s; //Create a new status
-        const int kInd = cnn_frame_ind_[i * kMaxCNNImages_ + j]; //find which frame to look at
-        cnn_confidence_[kInd] = output_mapped(j, 1); //store the confidence level
-        if (output_mapped(j, 1) < lower_thresh) { //Definitely a no
+      auto output_mapped = outputs[0].tensor<float, 2>();
+      for (size_t j = 0; j < kImagesToRun; j++) {
+        Status s;
+        const int kInd = cnn_frame_ind_[i * kMaxCNNImages_ + j];
+        cnn_confidence_[kInd] = output_mapped(j, 1);
+        if (output_mapped(j, 1) < lower_thresh) {
           labels_[kInd] = false;
           s = kDistillFiltered;
-        } else if (output_mapped(j, 1) > upper_thresh) { //Definitely a yes
+        } else if (output_mapped(j, 1) > upper_thresh) {
           labels_[kInd] = true;
           s = kDistillFiltered;
-        } else { //Pass to YOLO
+        } else {
           s = kDistillUnfiltered;
         }
-        frame_status_[kInd] = s; //store the frame status in larger array
+        frame_status_[kInd] = s;
       }
     }
   }
@@ -195,26 +189,26 @@ static void noscope_rgbgr_image(image im) {
 
 void NoscopeLabeler::RunYOLO(const bool actually_run) {
   if (actually_run) {
-    for (size_t i = 0; i < kNbFrames_; i++) { //Run through every frame
+    for (size_t i = 0; i < kNbFrames_; i++) {
       // Run YOLO on every unprocessed frame
-      if (frame_status_[i] == kDistillFiltered) //check frame hasn't been filtered by small CNN
+      if (frame_status_[i] == kDistillFiltered)
         continue;
-      if (frame_status_[i] == kDiffFiltered) //check frame hasn't been filtered by difference
+      if (frame_status_[i] == kDiffFiltered)
         continue;
       cv::Mat cpp_frame(NoscopeData::kYOLOResol_, CV_8UC3,
-                        const_cast<uint8_t *>(&all_data_.yolo_data_[i * all_data_.kYOLOFrameSize_])); //create an opencv matrix
+                        const_cast<uint8_t *>(&all_data_.yolo_data_[i * all_data_.kYOLOFrameSize_]));
 
-      IplImage frame = cpp_frame; //cast to IplImage
-      image yolo_frame = ipl_to_image(&frame); //convert to tensorflow(yolo) image
+      IplImage frame = cpp_frame;
+      image yolo_frame = ipl_to_image(&frame);
       // noscope_rgbgr_image(yolo_frame);
-      yolo_confidence_[i] = yolo_->LabelFrame(yolo_frame); //actually run frame through yolo and retrieve label
-      free_image(yolo_frame);  //from image.h -> frees image from memory?
+      yolo_confidence_[i] = yolo_->LabelFrame(yolo_frame);
+      free_image(yolo_frame);
       /*if (yolo_confidence_[i] != 0)
         std::cerr << "frame " << i << ": " << yolo_confidence_[i] << "\n";*/
-      labels_[i] = yolo_confidence_[i] > 0; //save labeling back
-      frame_status_[i] = kYoloLabeled; //set frame status
+      labels_[i] = yolo_confidence_[i] > 0;
+      frame_status_[i] = kYoloLabeled;
     }
-  } else { //if you don't want to actually run through YOLO
+  } else {
     for (size_t i = 0; i < kNbFrames_; i++)
       if (frame_status_[i] == kDistillUnfiltered)
         frame_status_[i] = kYoloLabeled;
