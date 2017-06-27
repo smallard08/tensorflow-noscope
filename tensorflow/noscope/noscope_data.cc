@@ -5,12 +5,14 @@
 
 namespace noscope {
 
-const cv::Size NoscopeData::kYOLOResol_(416, 416);
-const cv::Size NoscopeData::kDiffResol_(100, 100);
-const cv::Size NoscopeData::kDistResol_(50, 50);
+const cv::Size NoscopeData::kYOLOResol_(416, 416); //YOLO frame sizing
+const cv::Size NoscopeData::kDiffResol_(100, 100);  //difference filter frame sizing
+const cv::Size NoscopeData::kDistResol_(50, 50); //small CNN frame sizing
 
 NoscopeData::NoscopeData(const std::string& fname,
-                   const size_t kSkip, const size_t kNbFrames, const size_t kStart) :
+                         const size_t kSkip, 
+                         const size_t kNbFrames, 
+                         const size_t kStart) :
     kNbFrames_(kNbFrames / kSkip),
     kSkip_(kSkip),
     yolo_data_(kYOLOFrameSize_ * kNbFrames_),

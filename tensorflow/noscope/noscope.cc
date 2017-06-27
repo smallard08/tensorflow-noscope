@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
   std::cerr << "Loaded NoscopeLabeler\n";
 
   auto start = std::chrono::high_resolution_clock::now();
-  labeler.RunDifferenceFilter(diff_thresh, 10000000, kUseBlocked, kRefImage);
+  labeler.RunDifferenceFilter(diff_thresh, kUseBlocked, kRefImage);
   auto diff_end = std::chrono::high_resolution_clock::now();
   if (!kSkipSmallCNN) {
     labeler.PopulateCNNFrames();

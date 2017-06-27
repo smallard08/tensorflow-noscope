@@ -29,7 +29,7 @@ class NoscopeStream {
   std::vector<uint8_t> frame_queue_;
   
   //filters for this particular stream
-  tensorflow::Session small_cnn_;
+  tensorflow::Session *small_cnn_;
   noscope::filters::DifferenceFilter diff_filt_;
   
   NoscopeStream(const size_t kSkip, 

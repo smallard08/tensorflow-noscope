@@ -52,16 +52,16 @@ NoscopeLabeler::NoscopeLabeler(tensorflow::Session *session,
 */
 
 void NoscopeLabeler::RunDifferenceFilter(const float lower_thresh, //threshold to pass on to next level
-                                      const float upper_thresh, //FT
+                                      const float upper_thresh,
                                       const bool const_ref, 
                                       const size_t kRef) {
-  const std::vector<uint8_t>& kFrameData = all_data_.diff_data_; //load the stuff the difference filter should be handling TIGTBAP
+  const std::vector<uint8_t>& kFrameData = all_data_.diff_data_; //load the stuff the difference filter should be handling
   const int kFrameSize = NoscopeData::kDiffFrameSize_; //Getting how big each frame is so you can fastforward to stuff
   #pragma omp parallel for num_threads(kNumThreads_) schedule(static)
   for (size_t i = kDiffDelay_; i < kNbFrames_; i++) { //Run over every single frame in the batch
     const uint8_t *kRefImg = const_ref ?
         &kFrameData[kRef * kFrameSize] :
-        &kFrameData[(i - kDiffDelay_) * kFrameSize]; //retrieve the reference image - TIGTBAP
+        &kFrameData[(i - kDiffDelay_) * kFrameSize]; //retrieve the reference image
     float tmp = kDifferenceFilter_.fp(&kFrameData[i * kFrameSize], kRefImg); //actual run of the difference filter
     diff_confidence_[i] = tmp; //save the difference value back as a confidence value
     if (tmp < lower_thresh) { //If there is very low difference
@@ -79,16 +79,17 @@ void NoscopeLabeler::RunDifferenceFilter(const float lower_thresh, //threshold t
 void NoscopeLabeler::PopulateCNNFrames() {
   auto start = std::chrono::high_resolution_clock::now();
 
-  for (size_t i = 0; i < kDiffDelay_; i++) cnn_frame_ind_.push_back(i); //Add every frame before the difference delay TIGTBAP
+  for (size_t i = 0; i < kDiffDelay_; i++) cnn_frame_ind_.push_back(i); //Add every frame before the difference delay
 
-  const std::vector<float>& kDistData = all_data_.dist_data_; //FT
+  const std::vector<float>& kDistData = all_data_.dist_data_;
+  const std::vector<float>& kDistData = all_data_.dist_data_;
   const int kFrameSize = NoscopeData::kDistFrameSize_; //Need this to jump to random places in the array?
 
 
   using namespace tensorflow;
   const size_t kNbCNNFrames = cnn_frame_ind_.size(); //How many frames need to look at
-  const size_t kNbLoops = (kNbCNNFrames + kMaxCNNImages_ - 1) / kMaxCNNImages_; //Figure the number of passes you need TIGTBAP
-  const float* avg = (float *) avg_.data; //TIGTBAP
+  const size_t kNbLoops = (kNbCNNFrames + kMaxCNNImages_ - 1) / kMaxCNNImages_; //Figure the number of passes you need
+  const float* avg = (float *) avg_.data;
   for (size_t i = 0; i < kNbLoops; i++) { //Creating tensors of the correct size
     const size_t kImagesToRun =
         std::min(kMaxCNNImages_, cnn_frame_ind_.size() - i * kMaxCNNImages_); //number of frames in this batch

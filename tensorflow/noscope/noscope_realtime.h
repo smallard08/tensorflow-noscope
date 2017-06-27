@@ -17,6 +17,7 @@
 #include "tensorflow/noscope/noscope_labeler.h"
 #include "tensorflow/noscope/noscope_data.h"
 #include "tensorflow/noscope/darknet/src/yolo.h"
+#include "tensorflow/noscope/noscope_stream.h"
 
 namespace noscope {
 
