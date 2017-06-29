@@ -1,11 +1,14 @@
-#include <iostream>
-
 #include "filter.h"
 
-Filter::Filter() {
-  //use this to start the queue listener thread
-}
+namespace noscope {
+
+Filter::Filter(const size_t resolution) :
+  kResolution_(resolution){
+
+} //Filter()
 
 Filter::~Filter() {
-  //kill queue listener thread
-}
+
+}//~Filter()
+
+} //namespace noscope

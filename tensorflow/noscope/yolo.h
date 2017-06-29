@@ -1,12 +1,36 @@
-#include "filter.h"
+#include <string>
+#include <atomic>
 
-class YOLO : public Filter {
+#include "tensorflow/noscope/darknet/src/yolo.h"
+#include "tensorflow/noscope/darknet/src/image.h"
+
+namespace noscope {
+
+class YOLOClassify{
 
 public:
-  YOLO(int model);
-  ~YOLO();
-  int CheckFrame(int frame);
+  YOLOClassify(size_t resolution,
+               yolo::YOLO *model);
+  ~YOLOClassify();
+
+  //lock the yolo nn, return success
+  bool Lock(int stream_id);
+
+  //unlock the yolo nn, return success
+  bool Unlock();
+
+  //can only be called if resource has been locked
+  int CheckFrame(uint8_t *frame, int yolo_class);
 
 private:
-  const int kModel_;
+  //what resolution incoming image should be
+  const size_t kResolution_;
+
+  //holds yolo model object
+  const yolo::YOLO *kModel_;
+
+  //which stream has lock on yolo resource (-1 if none)
+  std::atomic<int> stream_lock_;
 };
+
+} //namespace noscope
