@@ -11,25 +11,25 @@
 
 namespace noscope {
 
+bool NoscopeStream::AddFrames(std::string& fname) {
+  return false;
+}//AddFrames()
+
+bool NoscopeStream::DequeueFrames(int num) {
+  return false;
+}//DequeueFrames()
+
 NoscopeStream::NoscopeStream(const size_t kSkip, 
                              const size_t kQueueSize,
                              const tensorflow::Session *small_cnn,
                              const noscope::filters::DifferenceFilter diff_filt) :
 				  kSkip_(kSkip),
-				  skip_counter_(0),
 				  kQueueSize_(kQueueSize),
-				  frame_queue_(kQueueSize),
 				  small_cnn_(small_cnn),
-				  diff_filt_(diff_filt) {
+				  diff_filt_(diff_filt),
+				  skip_counter_(0),
+				  frame_queue_(kQueueSize) {
 
 }//NoscopeStream()
-
-bool NoscopeStream::AddFrames(std::string& fname) {
-	return false;
-}//AddFrames()
-
-bool NoscopeStream::DequeueFrames(int num) {
-	return false;
-}//DequeueFrames()
   
 }//namespace noscope

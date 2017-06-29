@@ -11,11 +11,7 @@
 #include "tensorflow/core/graph/default_device.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include "tensorflow/noscope/mse.h"
 #include "tensorflow/noscope/filters.h"
-#include "tensorflow/noscope/MemoryTests.h"
-#include "tensorflow/noscope/noscope_labeler.h"
-#include "tensorflow/noscope/noscope_data.h"
 #include "tensorflow/noscope/darknet/src/yolo.h"
 
 void LabelVideo(int stream_id, std::string& video_fname, std::string& output_fname) {
@@ -23,7 +19,8 @@ void LabelVideo(int stream_id, std::string& video_fname, std::string& output_fna
 	//add frames to correct NoscopeStream
 }
 
-void KillLabeler() {
+void Kill() {
+  //kill all waiting threads
 	//clean all remaining memory
 }
 

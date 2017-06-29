@@ -11,11 +11,6 @@
 #include "tensorflow/core/graph/default_device.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include "tensorflow/noscope/mse.h"
-#include "tensorflow/noscope/filters.h"
-#include "tensorflow/noscope/MemoryTests.h"
-#include "tensorflow/noscope/noscope_labeler.h"
-#include "tensorflow/noscope/noscope_data.h"
 #include "tensorflow/noscope/darknet/src/yolo.h"
 #include "tensorflow/noscope/noscope_stream.h"
 
@@ -26,7 +21,7 @@ class NoscopeRealtime {
 public:
 	void LabelVideo(int stream_id, std::string& video_fname, std::string& output_fname);
 
-	void KillLabeler();
+	void Kill();
 
 	void Init();
 
