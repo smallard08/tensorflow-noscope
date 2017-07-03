@@ -1,30 +1,29 @@
-#ifndef FILTER_H_
-#define FILTER_H_
+#ifndef NOSCOPE_TENSORFLOW_NOSCOPE_FILTER_H_
+#define NOSCOPE_TENSORFLOW_NOSCOPE_FILTER_H_
 
 #include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
 
+#include "opencv2/opencv.hpp"
+
 namespace noscope {
 
 class Filter {
 
 public:
-   Filter(const size_t resolution);
-   virtual ~Filter();
-
-   //Run frame through filter and return 1, 0, -1 (yes, uncertain, no)
-   virtual int CheckFrame(uint8_t *frame);
+ Filter(const size_t resolution);
+ virtual ~Filter();
 
 protected:
-   //Number of channels (seems constant throughout noscope?)
-   const size_t kNbChannels_ = 3;
+ //Number of channels
+ const size_t kNbChannels_ = 3;
 
-   //Expected resolution of image passed into filter
-   const size_t kResolution_;
+ //Expected resolution of image passed into filter
+ const size_t kResolution_;
 }; //class Filter
 
 } //namespace noscope
 
-#endif
+#endif //NOSCOPE_TENSORFLOW_NOSCOPE_FILTER_H_

@@ -16,24 +16,24 @@ struct YoloQueueTriple {
 class RealtimeLabeler{
 
 public:
-  RealtimeLabeler(std::vector<Stream*> stream_list);
+ RealtimeLabeler(std::vector<Stream*> stream_list);
 
-  ~RealtimeLabeler();
+ ~RealtimeLabeler();
 
-  std::vector<int> LabelFile(std::string& fname, int stream_id);
+ std::vector<int> LabelFile(std::string& fname, int stream_id);
 
 private:
-  //list of all streams for this session
-  const std::vector<Stream*> kStreamList_;
+ //list of all streams for this session
+ const std::vector<Stream*> kStreamList_;
 
-  //vector of all queued frames for each stream
-  std::vector<std::queue<uint8_t*>> filter_queues_;
+ //vector of all queued frames for each stream
+ std::vector<std::queue<cv::Mat>> filter_queues_;
 
-  //queue to access yolo labeler
-  std::queue<YoloQueueTriple> yolo_queue_;
+ //queue to access yolo labeler
+ std::queue<YoloQueueTriple> yolo_queue_;
 
-  //vector of all threads running each stream
-  std::vector<std::thread> thread_list_;
+ //vector of all threads running each stream
+ std::vector<std::thread> thread_list_;
 }; //RealtimeLabeler
 
 } //namespace noscope

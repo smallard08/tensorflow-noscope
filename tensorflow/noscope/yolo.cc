@@ -4,9 +4,8 @@ namespace noscope {
 
 YOLOClassify::YOLOClassify(size_t resolution,
                            yolo::YOLO *model) :
-  kResolution_(resolution),
-  kModel_(model),
-  stream_lock_(-1) {
+    Filter(resolution),
+    kModel_(model) {
 }//YOLOClassify
 
 YOLOClassify::~YOLOClassify() {
@@ -19,9 +18,9 @@ bool Lock(int stream_id) {
 
 bool Unlock() {
   return false;
-}//Unlock
+}//Unlock()
 
-int YOLOClassify::CheckFrame(uint8_t *frame, int yolo_class) {
+int YOLOClassify::CheckFrame(cv::Mat frame, int yolo_class) {
   return -1;
 }//CheckFrame()
 

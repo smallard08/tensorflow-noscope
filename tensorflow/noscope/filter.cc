@@ -3,7 +3,7 @@
 namespace noscope {
 
 Filter::Filter(const size_t resolution) :
-  kResolution_(resolution){
+    kResolution_(resolution) {
 
 } //Filter()
 

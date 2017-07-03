@@ -2,21 +2,21 @@
 
 namespace noscope {
 
-SpecCNN::SpecCNN(const size_t resolution,
-                 tensorflow::Session *session,
-                 const float u_thresh,
-                 const float l_thresh) :
-  Filter(resolution),
-  kSession_(session),
-  kUThreshold_(u_thresh),
-  kLThreshold_(l_thresh) {
-}//SpecCNN()
+SpecializedCNN::SpecializedCNN(const size_t resolution,
+                               tensorflow::Session *session,
+                               const float u_thresh,
+                               const float l_thresh) :
+    Filter(resolution),
+    kSession_(session),
+    kUThreshold_(u_thresh),
+    kLThreshold_(l_thresh) {
+}//SpecializedCNN()
 
-SpecCNN::~SpecCNN() {
+SpecializedCNN::~SpecializedCNN() {
 
-}//~SpecCNN
+}//~SpecializedCNN
 
-int SpecCNN::CheckFrame(uint8_t *frame) {
+int SpecializedCNN::CheckFrame(cv::Mat frame) {
   return -1;
 }//CheckFrame()
 

@@ -2,50 +2,32 @@
 
 namespace noscope {
 
-class DiffDetector : public Filter {
+class DifferenceDetector : public Filter {
 
 public:
-  enum DiffType {
-    kBlocked,
-    kGlobal,
-    kNone
-  }; //enum DiffType
-  DiffDetector(const size_t resolution,
-               uint8_t *ref,
-               const float threshold,
-               const DiffType d_type,
-               const std::string& weight_file,
-               const size_t num_blocks,
-               const bool r_type,
-               const int ref_offset);
-  ~DiffDetector();
-  int CheckFrame(uint8_t *frame);
+ DifferenceDetector(const size_t resolution,
+                    cv::Mat ref,
+                    const float threshold,
+                    const bool r_type,
+                    const int ref_offset);
+ ~DifferenceDetector();
 
-private:
-  //pointer to reference image
-  uint8_t *ref_img_;
+ //pointer to reference image
+ cv::Mat ref_img_;
 
-  //difference threshold to make decision
-  const float kThreshold_;
+ //difference threshold to make decision
+ const float kThreshold_;
 
-  //Difference type (blocked, global, none..)
-  const DiffType kDType_;
+ //Reference image specific variables
+ const bool kFixedRef_;
+ const int kRefOffset_;
+ int offset_counter_ = 0;
 
-  //Block specific variables
-  float* kWeights_;
-  const size_t kNumBlocks_;
+ virtual int CheckFrame(cv::Mat frame);
 
-  //Reference image specific variables
-  const bool kFixedRef_;
-  const int kRefOffset_;
-  int offset_counter_ = 0;
+ //Reset reference image (if not fixed)
+ void UpdateRefImage(cv::Mat ref);
 
-  //Reset reference image (if not fixed)
-  void UpdateRefImage(uint8_t *ref);
-
-  //Load the weights into kWeights_ array from file
-  void LoadWeights(std::string& fname);
-
-}; //class DiffDetector
+}; //class DifferenceDetector
 
 } //namespace noscope
